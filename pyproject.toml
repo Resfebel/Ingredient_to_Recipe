@@ -22,3 +22,13 @@ dependencies = [
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "ingredient-recipe-chatbot" # ⬅️ 이 이름으로 된 폴더를 찾습니다.
+packages = [
+    { include = "app.py" }, # 루트 파일 포함
+    { include = "routers" },
+    { include = "services" },
+    { include = "schemas" },
+    { include = "dependencies" },
+]
