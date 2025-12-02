@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingredient Recipe Chatbot (FastAPI)</title>
+    <style>
+        /* 기본 스타일 */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 40px;
+            background-color: #f8f9fa;
+            color: #343a40;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #28a745;
+            text-align: center;
+            border-bottom: 3px solid #e9ecef;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-top: 20px;
+            font-weight: 600;
+            color: #495057;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            border-radius: 6px;
+            border: 1px solid #ced4da;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            border-color: #28a745;
+            outline: none;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 30px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        button:active {
+            transform: scale(0.99);
+        }
+        #results {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px dashed #ced4da;
+        }
+        .recipe-card {
+            border: 1px solid #e9ecef;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background-color: #f8f9fa;
+        }
+        .recipe-card h4 {
+            color: #007bff;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            border-bottom: 1px dotted #dee2e6;
+            padding-bottom: 5px;
+        }
+        .loading {
+            color: #28a745;
+            font-style: italic;
+            text-align: center;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍲 레시피를 추천해드립니다</h1>
+        <p style="color: #6c757d; font-size: 14px;">식재료를 적으면 해당 식재료를 주재료로 하는 3가지의 레시피를 추천해드립니다!</p>
+
+        <label for="username">👤 유저네임:</label>
+        <input type="text" id="username" value="User_A" placeholder="User Name" required>
+
+        <label for="ingredient">🥦 식재료 (쉼표로 구분):</label>
+        <input type="text" id="ingredient" placeholder="예: 양파, 계란, 당근" required>
+
+        <button onclick="fetchRecipes()">레시피 추천받기</button>
+
+        <h2>결과</h2>
+        <div id="results">
+            <p style="text-align: center; color: #6c757d;">식재료를 입력하고 버튼을 눌러주세요.</p>
+        </div>
+    </div>
+
+    <script>
+        function fetchRecipes() {
+            const username = document.getElementById('username').value;
+            const ingredient = document.getElementById('ingredient').value;
+            const resultsDiv = document.getElementById('results');
+
+            console.log("username", username);
+            console.log("ingredient", ingredient);
+            if (!username || !ingredient) {
+                resultsDiv.innerHTML = '<p style="color: red; text-align: center;">유저네임과 식재료를 모두 입력해 주세요.</p>';
+                return;
+            }
+
+            resultsDiv.innerHTML = "<h4 class='loading'>레시피를 생성 중입니다... 잠시만 기다려주세요.</h4>";
+
+            // FastAPI의 /recipes 엔드포인트로 POST 요청을 보냅니다.
+            fetch('/recipes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                // JSON 본문은 서버의 RecipeRequest Pydantic 모델에 맞게 구성
+                body: JSON.stringify({ username: username, ingredient: ingredient })
+            })
+            .then(response => {
+                // HTTP 상태 코드가 200번대가 아니면 오류 처리
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        // 서버에서 보낸 상세 에러 메시지 추출
+                        throw new Error(err.detail || 'API 호출 실패');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                let htmlContent = '<h3>추천 레시피</h3>';
+                if (data.recipes && data.recipes.length > 0) {
+                    data.recipes.forEach(recipe => {
+                        htmlContent += `
+                            <div class="recipe-card">
+                                <h4>${recipe.menu}</h4>
+                                <p><strong>추가 재료:</strong> ${recipe.ingredient}</p>
+                                <p><strong>조리 방법:</strong> ${recipe.step}</p>
+                            </div>
+                        `;
+                    });
+                } else {
+                    htmlContent = '<p style="color: #dc3545; text-align: center;">추천할 레시피를 찾지 못했습니다. 다른 재료를 시도해 보세요.</p>';
+                }
+                resultsDiv.innerHTML = htmlContent;
+            })
+            .catch(error => {
+                console.error('Error fetching recipes:', error);
+                resultsDiv.innerHTML = `<p style="color: red; text-align: center;">오류 발생: ${error.message}</p>`;
+            });
+        }
+    </script>
+</body>
+</html>

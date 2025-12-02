@@ -11,5 +11,5 @@ class Recipe(BaseModel):
     ingredient: str
     step: str
 
-class Response(BaseModel):
+class RecipesResponse(BaseModel):
     recipes: List[Recipe]

@@ -1,7 +1,7 @@
 from google import genai
 from google.genai.errors import APIError
 
-from schemas.recipe_schema import Recipe, Response
+from schemas.recipe_schema import Recipe, RecipesResponse
 
 import json
 
@@ -16,7 +16,7 @@ SYSTEM_PROMPT = """
 """
 
 async def recipes_by_gemini(client: genai.Client, ingredient: str) -> dict:
-    user_prompt = f"다음 식재료를 사용해 레시피를 3~5개 추천해줘. 식재료 : {ingredient}"
+    user_prompt = f"다음 식재료를 사용해 레시피를 3개 추천해줘. 식재료 : {ingredient}"
 
     try:
         response = client.models.generate_content(
@@ -24,7 +24,7 @@ async def recipes_by_gemini(client: genai.Client, ingredient: str) -> dict:
             contents = [SYSTEM_PROMPT, user_prompt],
             config = genai.types.GenerateContentConfig(
                 response_mime_type="application/json",
-                response_schema = Response
+                response_schema = RecipesResponse
             )
         )
 
