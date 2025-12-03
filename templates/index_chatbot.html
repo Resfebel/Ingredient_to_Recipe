@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>치즈🧀 ~레시피 챗봇~ </title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 변수 정의: 노란색 계열 유지 */
+        :root {
+            --primary-color: #ffc107; /* 노란색 (앰버) */
+            --accent-color: #ff9800; /* 강조색 (오렌지) */
+            --bg-color: #fff8e1; /* 매우 연한 노란 배경색 */
+            --text-color: #333;
+            --chat-bg-color: #ffffff;
+            --user-bubble-bg: #fffbe0; /* 사용자 말풍선 배경 (연한 노란색) */
+            --ai-bubble-bg: #f5f5f5; /* AI 말풍선 배경 */
+            --border-color: #ffecb3;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 700px;
+            background: var(--chat-bg-color);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 80vh; /* 화면 크기에 맞게 조정 */
+        }
+
+        .chat-header {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            padding: 20px;
+            text-align: center;
+            font-size: 1.6em;
+            font-weight: 700;
+            border-bottom: 2px solid var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chat-header span.status-indicator {
+            margin-left: 10px;
+            font-size: 0.8em;
+            font-weight: 500;
+            background-color: #ffe082;
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+
+        /* 초기 연결 설정 화면 스타일 */
+        #connection-setup {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+        }
+        #connection-setup h2 {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+        }
+
+        /* 채팅 인터페이스 스타일 */
+        #chat-interface {
+            flex-grow: 1;
+            display: none; /* 초기에는 숨김 */
+            flex-direction: column;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+            font-size: 1em;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input[type="text"]:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.3);
+            outline: none;
+        }
+
+        button {
+            padding: 12px 20px;
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 500;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        button:hover {
+            background-color: var(--accent-color);
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            color: #777;
+        }
+
+        #messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background-color: #fcfcfc;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 메시지 버블 스타일 */
+        .message-bubble {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: flex-end;
+        }
+        .message-bubble.user {
+            justify-content: flex-end;
+        }
+        .message-bubble.ai {
+            justify-content: flex-start;
+        }
+
+        .ai-icon {
+            font-size: 24px;
+            margin-right: 10px;
+            align-self: flex-start;
+        }
+
+        .message-content {
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 75%;
+            word-wrap: break-word;
+            font-size: 0.95em;
+            line-height: 1.5;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            white-space: pre-wrap; /* 줄바꿈 유지 */
+        }
+        .message-bubble.user .message-content {
+            background-color: var(--user-bubble-bg);
+            color: var(--text-color);
+            border-bottom-right-radius: 4px;
+        }
+        .message-bubble.ai .message-content {
+            background-color: var(--ai-bubble-bg);
+            color: var(--text-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        /* 타이핑 효과 (커서) */
+        .message-content.typing::after {
+            content: '|';
+            animation: blink-caret .75s step-end infinite;
+            display: inline-block;
+            margin-left: 2px;
+        }
+        @keyframes blink-caret {
+            from, to { opacity: 0 }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            레시피 챗봇 치즈<span style="font-size: 22px;">🧀</span>
+            <span id="connectionStatus" class="status-indicator">연결 대기 중</span>
+        </div>
+
+        <!-- 1. 연결 설정 화면 (초기 화면) -->
+        <div id="connection-setup">
+            <h2>🧀 치즈에 오신 것을 환영합니다!</h2>
+            <p style="margin-top: 5px; margin-bottom: 10px;"> 치즈는 재료를 입력받아 레시피를 만들어주는 ai 챗봇입니다. 🍳</p>
+            <p style="margin-top: 5px; margin-bottom: 30px;"> 유통기한이 얼마 남지 않은 재료, 오늘 먹고싶은 재료 등을 입력해보세요!</p>
+            <div style="width: 80%; max-width: 400px;">
+                <label for="usernameInput" style="text-align: left; display: block;"> 이름 입력:</label>
+                <div class="input-group" style="margin-top: 0;">
+                    <input type="text" id="usernameInput" value="" placeholder="이름을 입력하세요 (예: 멀구)">
+                    <button id="connectBtn" onclick="connectWebSocket()">연결</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 채팅 인터페이스 (연결 성공 후 표시) -->
+        <div id="chat-interface">
+            <div id="messages">
+                <!-- 메시지가 여기에 표시됩니다 -->
+            </div>
+            <form id="messageForm" class="input-group">
+                <input type="text" id="messageInput" placeholder="식재료를 입력하고 레시피를 추천받아보세요! (예: 양파, 치즈)">
+                <button type="submit" id="sendBtn" disabled>전송</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let currentTypingContentElement = null; // 현재 타이핑 중인 메시지 content div
+        let isStreaming = false;
+        let isImeComposing = false;
+
+        // WebSocket URL 설정 (현재 도메인 사용)
+        const host = window.location.host;
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const WS_BASE_URL = `${protocol}//${host}/ws`;
+
+        const CHATBOT_NAME = "치즈";
+        const AI_ICON = "🧀";
+
+        // DOM 요소
+        const usernameInput = document.getElementById('usernameInput');
+        const connectBtn = document.getElementById('connectBtn');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const messagesDiv = document.getElementById('messages');
+        const connectionSetupDiv = document.getElementById('connection-setup');
+        const chatInterfaceDiv = document.getElementById('chat-interface');
+        const connectionStatusSpan = document.getElementById('connectionStatus');
+        const messageForm = document.getElementById('messageForm'); // FORM 요소 가져오기
+
+        /**
+         * 메시지 영역에 새로운 메시지 요소를 추가합니다.
+         * @param {string} text - 메시지 내용
+         * @param {'user' | 'ai' | 'status'} type - 메시지 타입
+         * @param {boolean} isStreamingStart - AI 메시지 스트리밍 시작 여부
+         * @returns {HTMLElement | null} 메시지 내용(content) div
+         */
+        function appendMessage(text, type, isStreamingStart = false) {
+            // 메시지 버블 래퍼 생성
+            const messageBubble = document.createElement('div');
+            messageBubble.classList.add('message-bubble', type);
+
+            // 메시지 내용 Div 생성
+            const contentDiv = document.createElement('div');
+            contentDiv.classList.add('message-content');
+
+            if (type === 'ai') {
+                // AI 메시지일 경우 아이콘 추가
+                const iconSpan = document.createElement('span');
+                iconSpan.classList.add('ai-icon');
+                iconSpan.textContent = AI_ICON;
+                messageBubble.appendChild(iconSpan);
+            }
+
+            if (isStreamingStart) {
+                // 스트리밍 시작 시, 내용 없이 커서만 보이도록 설정
+                contentDiv.textContent = '';
+                contentDiv.classList.add('typing');
+                currentTypingContentElement = contentDiv;
+            } else {
+                // 일반 메시지는 텍스트 바로 추가
+                contentDiv.textContent = text;
+            }
+
+            messageBubble.appendChild(contentDiv);
+            messagesDiv.appendChild(messageBubble);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            return contentDiv;
+        }
+
+        /**
+         * 챗봇 연결을 시작하고 이벤트 리스너를 설정합니다.
+         */
+        function connectWebSocket() {
+            const username = usernameInput.value.trim();
+            if (!username) {
+                alert("사용자 이름을 입력해 주세요.");
+                return;
+            }
+
+            if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
+                return;
+            }
+
+            connectBtn.disabled = true;
+            usernameInput.disabled = true;
+
+            connectionStatusSpan.textContent = '연결 중...';
+
+            ws = new WebSocket(`${WS_BASE_URL}/${username}`);
+
+            ws.onopen = function(event) {
+                console.log("WebSocket Connected:", event);
+                connectionStatusSpan.textContent = ' 💡 ';
+
+                // 화면 전환: 연결 설정 숨김 -> 채팅 인터페이스 표시
+                connectionSetupDiv.style.display = 'none';
+                chatInterfaceDiv.style.display = 'flex';
+
+                messagesDiv.innerHTML = '';
+
+                // 초기 인사말 (스트리밍 시작 아님)
+                appendMessage(`안녕하세요, ${username}님! 저는 레시피를 알려주는 ${CHATBOT_NAME}입니다. 재료를 알려주시면 주재료로 하는 3가지의 레시피를 추천해 드릴게요!`, 'ai');
+
+                sendBtn.disabled = false;
+                messageInput.focus();
+            };
+
+            ws.onmessage = function(event) {
+                const data = event.data;
+
+                if (data.includes("--- 레시피 ---")) {
+                    isStreaming = true;
+                    // 이전 메시지가 있다면 타이핑 효과 제거
+                    if (currentTypingContentElement) {
+                        currentTypingContentElement.classList.remove('typing');
+                    }
+                    // 새로운 스트리밍 메시지 버블 시작
+                    appendMessage('', 'ai', true);
+                    messageInput.disabled = true; // 응답받는 동안 입력 비활성화
+                    sendBtn.disabled = true;
+                    return;
+                }
+
+                if (data.includes("--- 레시피 생성 완료 ---")) {
+                    isStreaming = false;
+                    // 타이핑 효과 종료 (커서 제거)
+                    if (currentTypingContentElement) {
+                        currentTypingContentElement.classList.remove('typing');
+                        currentTypingContentElement = null;
+                    }
+                    // 입력창 다시 활성화
+                    messageInput.disabled = false;
+                    sendBtn.disabled = false;
+                    messageInput.focus();
+                    return;
+                }
+
+                // 스트리밍 중인 메시지 처리
+                if (isStreaming && currentTypingContentElement) {
+                    // 수신된 청크를 현재 요소에 직접 추가 (타이핑 효과)
+                    currentTypingContentElement.textContent += data;
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                } else {
+                    // 서버 오류 또는 수신 확인 같은 비-스트리밍 메시지 처리
+                    appendMessage(data, 'ai');
+                }
+            };
+
+            ws.onclose = function(event) {
+                console.log("WebSocket Disconnected:", event);
+                connectionStatusSpan.textContent = ' ❌ ';
+
+                // 화면 전환: 채팅 인터페이스 숨김 -> 연결 설정 표시
+                chatInterfaceDiv.style.display = 'none';
+                connectionSetupDiv.style.display = 'flex';
+
+                appendMessage("❌ 서버와의 연결이 끊어졌습니다. 다시 연결해 주세요.", 'ai');
+
+                connectBtn.disabled = false;
+                usernameInput.disabled = false;
+                sendBtn.disabled = true;
+                isStreaming = false;
+                currentTypingContentElement = null;
+            };
+
+            ws.onerror = function(error) {
+                console.error("WebSocket Error:", error);
+                connectionStatusSpan.textContent = '🔴 오류 발생';
+                // onclose에서 대부분의 오류 상태를 처리
+            };
+        }
+
+        /**
+         * 사용자 메시지를 서버로 전송합니다.
+         */
+        function sendMessage() {
+            const ingredient = messageInput.value.trim();
+            if (!ingredient || isStreaming || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+            // 사용자 메시지 표시
+            appendMessage(ingredient, 'user');
+
+            // 서버로 메시지 전송
+            ws.send(ingredient);
+
+            // 입력창 초기화
+            messageInput.value = '';
+        }
+
+
+        // 이벤트 리스너 설정
+        // 1. 메시지 입력 중 IME 상태 감지
+        messageInput.addEventListener('compositionstart', () => {
+            isImeComposing = true;
+        });
+        messageInput.addEventListener('compositionend', () => {
+            isImeComposing = false;
+        });
+
+        // 2. 메시지 폼 제출 이벤트 (Enter 키 또는 전송 버튼 클릭 시)
+        messageForm.addEventListener('submit', function(event) {
+            event.preventDefault(); // 브라우저의 기본 폼 제출(페이지 새로고침) 동작을 막습니다.
+
+            // FIX: IME 합성 중이거나 Enter 키가 눌렸을 때 중복 전송을 막기 위해
+            // compositionend 이벤트가 아직 발생하지 않았을 경우 전송을 막습니다.
+            if (isImeComposing) {
+                // IME 확정이 완료된 후 submit 이벤트가 다시 발생할 것이므로 현재 전송을 막음
+                return;
+            }
+
+            sendMessage();
+        });
+
+        // 3. Enter 키를 눌렀을 때 연결 (이름 입력창)
+        usernameInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                connectWebSocket();
+            }
+        });
+
+        // 페이지 로드 시 사용자 이름 입력 필드에 포커스
+        window.addEventListener('load', () => {
+            usernameInput.focus();
+        });
+    </script>
+</body>
+</html>

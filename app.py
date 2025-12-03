@@ -29,7 +29,8 @@ app.include_router(recipe_router.router)
 @app.get("/")
 async def index(request: Request):
     return templates.TemplateResponse(
-        name = "index.html",
+        #name = "index.html",
+        name="index_chatbot.html",
         context = {"request": request},
     )
 
