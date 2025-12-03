@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>치즈🧀 ~레시피 챗봇~ </title>
+    <title> CHEES2🧀 레시피 마법사 치즈 </title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         /* 변수 정의: 노란색 계열 유지 */
@@ -204,17 +204,16 @@
 <body>
     <div class="chat-container">
         <div class="chat-header">
-            레시피 챗봇 치즈<span style="font-size: 22px;">🧀</span>
-            <span id="connectionStatus" class="status-indicator">연결 대기 중</span>
+            레시피 마법사 🧀 CHEES2<span style="font-size: 20px;"></span>
+            <span id="connectionStatus" class="status-indicator" style="font-size: 15px;">연결 대기 중</span>
         </div>
 
         <!-- 1. 연결 설정 화면 (초기 화면) -->
         <div id="connection-setup">
-            <h2>🧀 치즈에 오신 것을 환영합니다!</h2>
-            <p style="margin-top: 5px; margin-bottom: 10px;"> 치즈는 재료를 입력받아 레시피를 만들어주는 ai 챗봇입니다. 🍳</p>
-            <p style="margin-top: 5px; margin-bottom: 30px;"> 유통기한이 얼마 남지 않은 재료, 오늘 먹고싶은 재료 등을 입력해보세요!</p>
+            <h2>🧀 치즈에 오신 것을 환영합니다! 🧀</h2>
+            <p style="margin-top: 5px; margin-bottom: 10px;"> 치즈는 재료를 입력받아 레시피를 만들어주는 ai 레시피 마법사입니다. 🪄 </p>
+            <p style="margin-top: 5px; margin-bottom: 30px;"> 먹고싶은 재료, 유통기한이 얼마 남지 않은 재료, 혹은 오늘의 감정을 입력해보세요!</p>
             <div style="width: 80%; max-width: 400px;">
-                <label for="usernameInput" style="text-align: left; display: block;"> 이름 입력:</label>
                 <div class="input-group" style="margin-top: 0;">
                     <input type="text" id="usernameInput" value="" placeholder="이름을 입력하세요 (예: 멀구)">
                     <button id="connectBtn" onclick="connectWebSocket()">연결</button>
